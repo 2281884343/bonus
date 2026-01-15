@@ -124,6 +124,21 @@ def draw():
     
     data = read_data()
     
+    # 检查并初始化 drawSequence（兼容旧数据）
+    if 'drawSequence' not in data or not data.get('drawSequence'):
+        # 重新初始化抽奖顺序
+        prizes = data.get('prizes', [])
+        poems_draw = [
+            {'id': 'poem1', 'name': '情话1', 'type': 'poem'},
+            {'id': 'poem2', 'name': '情话2', 'type': 'poem'}
+        ]
+        draw_sequence = prizes + poems_draw
+        random.shuffle(draw_sequence)
+        data['drawSequence'] = draw_sequence
+        data['currentDrawIndex'] = 0
+        data['totalDraws'] = 5
+        write_data(data)
+    
     current_index = data.get('currentDrawIndex', 0)
     total_draws = data.get('totalDraws', 5)
     draw_sequence = data.get('drawSequence', [])
