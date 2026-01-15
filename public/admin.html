@@ -229,18 +229,18 @@
         <div class="stats">
           <div class="stat-card">
             <div class="stat-number" id="drawn-count">0</div>
-            <div class="stat-label">已抽奖品</div>
+            <div class="stat-label">已抽次数</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number" id="remaining-count">3</div>
-            <div class="stat-label">剩余奖品</div>
+            <div class="stat-number" id="remaining-count">5</div>
+            <div class="stat-label">剩余次数</div>
           </div>
         </div>
         
-        <!-- 奖品列表 -->
+        <!-- 抽奖顺序 -->
         <div class="info-section">
-          <h2>奖品状态</h2>
-          <ul class="prize-list" id="prize-list"></ul>
+          <h2>抽奖顺序（共5次）</h2>
+          <ul class="prize-list" id="draw-sequence"></ul>
         </div>
         
         <!-- 操作按钮 -->
@@ -284,27 +284,38 @@
     // 显示数据
     function displayData(data) {
       // 更新统计数据
-      const drawnCount = data.drawnPrizes.length;
-      const remainingCount = data.prizes.length - drawnCount;
+      const drawnCount = data.currentDrawIndex || 0;
+      const totalDraws = data.totalDraws || 5;
+      const remainingCount = totalDraws - drawnCount;
       
       document.getElementById('drawn-count').textContent = drawnCount;
       document.getElementById('remaining-count').textContent = remainingCount;
       
-      // 更新奖品列表
-      const prizeList = document.getElementById('prize-list');
-      prizeList.innerHTML = '';
+      // 更新抽奖顺序列表
+      const sequenceList = document.getElementById('draw-sequence');
+      sequenceList.innerHTML = '';
       
-      data.prizes.forEach(prize => {
-        const isDrawn = data.drawnPrizes.includes(prize.id);
+      const drawSequence = data.drawSequence || [];
+      
+      drawSequence.forEach((item, index) => {
+        const isDrawn = index < drawnCount;
         const li = document.createElement('li');
         li.className = `prize-item ${isDrawn ? 'drawn' : ''}`;
+        
+        let displayName = '';
+        if (item.type === 'prize') {
+          displayName = item.name;
+        } else {
+          displayName = '情话（未中奖）';
+        }
+        
         li.innerHTML = `
-          <span>${prize.name}</span>
+          <span>第${index + 1}次：${displayName}</span>
           <span class="status-badge ${isDrawn ? 'status-drawn' : 'status-available'}">
             ${isDrawn ? '已抽取' : '未抽取'}
           </span>
         `;
-        prizeList.appendChild(li);
+        sequenceList.appendChild(li);
       });
     }
     

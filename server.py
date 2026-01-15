@@ -19,13 +19,30 @@ DATA_FILE = 'data.json'
 # 初始化数据
 def init_data():
     """初始化抽奖数据"""
+    import random
+    
+    # 定义三个奖品
+    prizes = [
+        {'id': 'grand', 'name': '大奖', 'type': 'prize'},
+        {'id': 'second', 'name': '二等奖', 'type': 'prize'},
+        {'id': 'special', 'name': '特别奖', 'type': 'prize'}
+    ]
+    
+    # 定义两次未获奖（情话）
+    poems_draw = [
+        {'id': 'poem1', 'name': '情话1', 'type': 'poem'},
+        {'id': 'poem2', 'name': '情话2', 'type': 'poem'}
+    ]
+    
+    # 合并并随机打乱顺序（5次抽奖机会）
+    draw_sequence = prizes + poems_draw
+    random.shuffle(draw_sequence)
+    
     default_data = {
-        'drawnPrizes': [],  # 已抽取的奖项
-        'prizes': [
-            {'id': 'grand', 'name': '大奖', 'type': 'prize'},
-            {'id': 'second', 'name': '二等奖', 'type': 'prize'},
-            {'id': 'special', 'name': '特别奖', 'type': 'prize'}
-        ],
+        'currentDrawIndex': 0,  # 当前抽奖次数
+        'drawSequence': draw_sequence,  # 随机生成的抽奖顺序
+        'totalDraws': 5,  # 总共5次抽奖机会
+        'prizes': prizes,
         'poems': [
             '愿得一心人，白首不相离',
             '山有木兮木有枝，心悦君兮君不知',
@@ -45,7 +62,6 @@ def init_data():
             '一生一世一双人，半醉半醒半浮生',
             '情不知所起，一往而深',
             '你是我的独家记忆，我的甜蜜回忆',
-            '余生很长，想和你在一起',
             '世间所有的相遇，都是久别重逢'
         ]
     }
@@ -91,10 +107,13 @@ def index():
 def get_status():
     """获取当前抽奖状态"""
     data = read_data()
+    current_index = data.get('currentDrawIndex', 0)
+    total_draws = data.get('totalDraws', 5)
+    
     return jsonify({
-        'drawnCount': len(data['drawnPrizes']),
-        'totalPrizes': len(data['prizes']),
-        'allPrizesDrawn': len(data['drawnPrizes']) >= len(data['prizes'])
+        'drawnCount': current_index,
+        'totalDraws': total_draws,
+        'allDrawsUsed': current_index >= total_draws
     })
 
 # API：抽奖
@@ -105,40 +124,67 @@ def draw():
     
     data = read_data()
     
-    # 检查是否还有奖品未抽取
-    available_prizes = [
-        prize for prize in data['prizes']
-        if prize['id'] not in data['drawnPrizes']
-    ]
+    current_index = data.get('currentDrawIndex', 0)
+    total_draws = data.get('totalDraws', 5)
+    draw_sequence = data.get('drawSequence', [])
     
-    if available_prizes:
-        # 还有奖品，返回一个未抽取的奖品
-        prize = available_prizes[0]
-        data['drawnPrizes'].append(prize['id'])
-        write_data(data)
-        
-        return jsonify({
-            'success': True,
-            'type': 'prize',
-            'result': prize['name'],
-            'message': f'恭喜你抽中了{prize["name"]}！'
-        })
-    else:
-        # 所有奖品已抽完，返回诗句
+    # 检查是否还有抽奖机会
+    if current_index >= total_draws:
+        # 所有机会已用完，返回随机诗句
         random_poem = random.choice(data['poems'])
         return jsonify({
             'success': True,
             'type': 'poem',
             'result': random_poem,
-            'message': '送你一句情话~'
+            'message': '抽奖次数已用完~'
+        })
+    
+    # 获取当前应该抽到的结果
+    current_draw = draw_sequence[current_index]
+    
+    # 更新抽奖次数
+    data['currentDrawIndex'] = current_index + 1
+    write_data(data)
+    
+    if current_draw['type'] == 'prize':
+        # 抽到奖品
+        return jsonify({
+            'success': True,
+            'type': 'prize',
+            'result': current_draw['name'],
+            'message': f'恭喜你抽中了{current_draw["name"]}！'
+        })
+    else:
+        # 抽到情话
+        random_poem = random.choice(data['poems'])
+        return jsonify({
+            'success': True,
+            'type': 'poem',
+            'result': random_poem,
+            'message': '再试试吧~'
         })
 
 # API：重置抽奖
 @app.route('/api/reset', methods=['POST'])
 def reset():
     """重置抽奖状态"""
+    import random
+    
     data = read_data()
-    data['drawnPrizes'] = []
+    
+    # 重新生成随机抽奖顺序
+    prizes = data['prizes']
+    poems_draw = [
+        {'id': 'poem1', 'name': '情话1', 'type': 'poem'},
+        {'id': 'poem2', 'name': '情话2', 'type': 'poem'}
+    ]
+    
+    draw_sequence = prizes + poems_draw
+    random.shuffle(draw_sequence)
+    
+    # 重置抽奖状态
+    data['currentDrawIndex'] = 0
+    data['drawSequence'] = draw_sequence
     
     if write_data(data):
         return jsonify({
@@ -156,10 +202,16 @@ def reset():
 def admin_info():
     """获取管理后台详细信息"""
     data = read_data()
+    current_index = data.get('currentDrawIndex', 0)
+    total_draws = data.get('totalDraws', 5)
+    draw_sequence = data.get('drawSequence', [])
+    
     return jsonify({
-        'drawnPrizes': data['drawnPrizes'],
+        'currentDrawIndex': current_index,
+        'totalDraws': total_draws,
+        'drawSequence': draw_sequence,
         'prizes': data['prizes'],
-        'allPrizesDrawn': len(data['drawnPrizes']) >= len(data['prizes'])
+        'allDrawsUsed': current_index >= total_draws
     })
 
 if __name__ == '__main__':
