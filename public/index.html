@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>幸运转盘</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 主标题 -->
+    <h1 class="title">
+      <span class="title-text">✨ 幸运转盘 ✨</span>
+    </h1>
+    
+    <!-- 转盘容器 -->
+    <div class="lottery-container">
+      <canvas id="lottery-canvas" width="400" height="400"></canvas>
+      
+      <!-- 指针 -->
+      <div class="pointer"></div>
+      
+      <!-- 抽奖按钮 -->
+      <button class="draw-button" id="draw-button">
+        <span>开始抽奖</span>
+      </button>
+    </div>
+    
+    <!-- 结果展示 -->
+    <div class="result-modal" id="result-modal">
+      <div class="result-content">
+        <div class="result-icon">🎉</div>
+        <h2 class="result-title" id="result-title"></h2>
+        <p class="result-message" id="result-message"></p>
+        <button class="close-button" id="close-button">确定</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
