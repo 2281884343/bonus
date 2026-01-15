@@ -1,3 +1,6 @@
+# 虚拟环境
+venv/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -32,8 +35,9 @@ data.json
 *.swp
 *.swo
 
-# 日志
+# 日志和进程文件
 *.log
+*.pid
 
 # Node (如果之前安装过)
 node_modules/
